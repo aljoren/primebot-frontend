@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AJ-ROELFSE PrimeBot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { margin:0; font-family:Arial; background:#ece5dd; }
+#app { max-width:600px; margin:auto; background:#fff; height:100vh; display:flex; flex-direction:column; }
+#header { background:#075e54; color:#fff; padding:15px; text-align:center; font-weight:bold; }
+#chat { flex:1; padding:10px; overflow-y:auto; }
+.msg { margin:6px 0; padding:8px 12px; border-radius:8px; max-width:80%; }
+.user { background:#dcf8c6; margin-left:auto; }
+.bot { background:#f1f0f0; }
+#input { display:flex; padding:10px; background:#f0f0f0; }
+#input input { flex:1; padding:10px; }
+#input button { padding:10px; }
+#pay { padding:10px; text-align:center; font-size:14px; }
+.small { font-size:12px; color:#555; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">🤖 AJ-ROELFSE PrimeBot</div>
+  <div id="chat"></div>
+  <div id="input">
+    <input id="q" placeholder="Ask PrimeBot…" />
+    <button onclick="send()">Send</button>
+  </div>
+
+  <div id="pay">
+    <p><b>Credits left:</b> <span id="credits">5</span></p>
+    <p><b>Unlock more access:</b></p>
+    <!-- PayPal -->
+    <form action="https://www.paypal.com/donate" method="post" target="_blank">
+      <input type="hidden" name="business" value="roelfsealjoren1@gmail.com">
+      <input type="hidden" name="currency_code" value="USD">
+      <input type="submit" value="Pay with PayPal">
+    </form>
+    <p>Crypto (Solana):</p>
+    <code class="small">AyE3U2wkUm7GApn76bHYT9PN72TvFDvDviLCZV9hVTD3</code>
+    <p class="small">Payments unlock message credits & time access.</p>
+  </div>
+</div>
+
+<script>
+const BACKEND = "YOUR_BACKEND_URL"; // Replace with deployed backend URL
+let userId = localStorage.getItem("primebot_user");
+if(!userId){
+  userId = "user_" + Math.random().toString(36).substring(2);
+  localStorage.setItem("primebot_user", userId);
+}
+let credits = 5;
+document.getElementById("credits").innerText = credits;
+const chat = document.getElementById("chat");
+
+async function send(){
+  if(credits <= 0){
+    chat.innerHTML += "<div class='msg bot'>🔒 Please unlock more access.</div>";
+    return;
+  }
+  const q = document.getElementById("q").value;
+  if(!q) return;
+  credits--;
+  document.getElementById("credits").innerText = credits;
+  chat.innerHTML += `<div class="msg user">${q}</div>`;
+  document.getElementById("q").value = "";
+  try{
+    const res = await fetch(BACKEND + "/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, question: q })
+    });
+    const data = await res.json();
+    chat.innerHTML += `<div class='msg bot'>${data.answer}</div>`;
+  }catch{
+    chat.innerHTML += "<div class='msg bot'>⚠️ AI temporarily offline</div>";
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+</script>
+</body>
+</html>
